@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from .models import User, Conversation, Message
 
-
 class UserSerializer(serializers.ModelSerializer):
-    # Explicit CharField for phone number
     phone_number = serializers.CharField(allow_blank=True, required=False)
 
     class Meta:
@@ -13,10 +11,9 @@ class UserSerializer(serializers.ModelSerializer):
             "bio", "phone_number", "profile_picture", "last_seen"
         ]
 
-
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    message_body = serializers.CharField(source='content')  # explicit CharField mapping content to message_body
+    message_body = serializers.CharField()
     sent_at = serializers.SerializerMethodField()
 
     class Meta:
@@ -26,9 +23,7 @@ class MessageSerializer(serializers.ModelSerializer):
         ]
 
     def get_sent_at(self, obj):
-        # Format timestamp or return string
-        return obj.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
+        return obj.sent_at.strftime("%Y-%m-%d %H:%M:%S")
 
 class ConversationSerializer(serializers.ModelSerializer):
     participants = UserSerializer(many=True, read_only=True)
