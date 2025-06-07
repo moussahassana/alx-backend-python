@@ -1,14 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid  
-
 # Custom user model
 class User(AbstractUser):
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
     bio = models.TextField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
