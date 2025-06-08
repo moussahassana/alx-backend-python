@@ -8,5 +8,3 @@ venv/
 env/ 
 .pytest_cache/ 
 .mypy_cache/ 
-logs/
-*.log
