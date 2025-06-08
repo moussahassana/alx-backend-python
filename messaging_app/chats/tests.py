@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from chats.models import Conversation, Message
-import uuid
 
 User = get_user_model()
 
@@ -139,3 +138,33 @@ class MessagingAppTests(APITestCase):
         url = reverse('conversation-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
+
+    def test_message_pagination(self):
+        # Create 25 messages to test pagination (20 per page)
+        for i in range(25):
+            Message.objects.create(
+                conversation=self.conversation,
+                sender=self.user1,
+                message_body=f"Message {i}"
+            )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user1_token}')
+        url = reverse('conversation-messages-list', kwargs={'conversation_pk': str(self.conversation.conversation_id)})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 20)  # Check page size
+        self.assertIn('next', response.data)  # Check for next page
+
+    def test_message_filter_by_sender(self):
+        # Create a message by user2
+        Message.objects.create(
+            conversation=self.conversation,
+            sender=self.user2,
+            message_body="User2's message"
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.user1_token}')
+        url = reverse('conversation-messages-list', kwargs={'conversation_pk': str(self.conversation.conversation_id)})
+        response = self.client.get(url, {'sender': str(self.user2.user_id)})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['sender']['user_id'], str(self.user2.user_id))
