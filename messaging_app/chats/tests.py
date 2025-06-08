@@ -138,10 +138,9 @@ class MessagingAppTests(APITestCase):
         url = reverse('conversation-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
 
     def test_message_pagination(self):
-        # Create 25 messages to test pagination (20 per page)
         for i in range(25):
             Message.objects.create(
                 conversation=self.conversation,
@@ -152,11 +151,11 @@ class MessagingAppTests(APITestCase):
         url = reverse('conversation-messages-list', kwargs={'conversation_pk': str(self.conversation.conversation_id)})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 20)  # Check page size
-        self.assertIn('next', response.data)  # Check for next page
+        self.assertEqual(len(response.data['results']), 20)
+        self.assertEqual(response.data['count'], 25) 
+        self.assertIsNotNone(response.data['next'])
 
     def test_message_filter_by_sender(self):
-        # Create a message by user2
         Message.objects.create(
             conversation=self.conversation,
             sender=self.user2,

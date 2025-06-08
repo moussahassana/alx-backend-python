@@ -1,12 +1,13 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .filters import MessageFilter
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import IsParticipantOfConversation, IsSenderOrReadOnly
-from django.contrib.auth import get_user_model
+from .filters import MessageFilter
+from .pagination import MessagePagination
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -18,12 +19,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
+        if user.is_authenticated and user.is_superuser:
             return Conversation.objects.all()
-        # For list views, return only conversations the user participates in
         if self.action == 'list':
             return Conversation.objects.filter(participants=user)
-        # For detail views, return all conversations (permissions will restrict access)
         return Conversation.objects.all()
 
     def create(self, request, *args, **kwargs):
@@ -50,6 +49,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsSenderOrReadOnly]
+    pagination_class = MessagePagination  # Explicitly set pagination class
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = MessageFilter
     search_fields = ['sender__username', 'message_body']
@@ -58,7 +58,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
+        if user.is_authenticated and user.is_superuser:
             return Message.objects.all()
         return Message.objects.filter(conversation__participants=user)
 
