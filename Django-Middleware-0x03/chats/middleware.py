@@ -71,3 +71,25 @@ class OffensiveLanguageMiddleware:
         # Proceed with the request
         response = self.get_response(request)
         return response
+    
+class RolePermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Skip for unauthenticated users or non-restricted methods
+        if not request.user.is_authenticated:
+            return self.get_response(request)
+
+        # Restrict DELETE requests and specific POST requests
+        if request.method == 'DELETE' or (
+            request.method == 'POST' and 'messages' in request.path.lower()
+        ):
+            if not (request.user.is_staff or request.user.is_moderator):
+                return HttpResponseForbidden(
+                    "Only admins or moderators can perform this action."
+                )
+
+        # Proceed with the request
+        response = self.get_response(request)
+        return response
