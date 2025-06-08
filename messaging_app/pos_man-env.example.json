@@ -1,0 +1,54 @@
+{
+  "id": "d2f6b8a3-9c1e-4a2b-8f7a-5b3d4e6f7c8a",
+  "name": "MessagingApp-Env",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "enabled": true
+    },
+    {
+      "key": "user1_username",
+      "value": "user1",
+      "enabled": true
+    },
+    {
+      "key": "user1_password",
+      "value": "testpass123",
+      "enabled": true
+    },
+    {
+      "key": "user1_user_id",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "enabled": true,
+      "description": "Replace with user1's actual UUID from the database"
+    },
+    {
+      "key": "user2_username",
+      "value": "user2",
+      "enabled": true
+    },
+    {
+      "key": "user2_password",
+      "value": "testpass123",
+      "enabled": true
+    },
+    {
+      "key": "user2_user_id",
+      "value": "00000000-0000-0000-0000-000000000002",
+      "enabled": true,
+      "description": "Replace with user2's actual UUID from the database"
+    },
+    {
+      "key": "user3_username",
+      "value": "user3",
+      "enabled": true
+    },
+    {
+      "key": "user3_password",
+      "value": "testpass123",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
