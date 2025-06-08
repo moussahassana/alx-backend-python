@@ -3,14 +3,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
-from .permissions import IsParticipantOrReadOnly, IsSenderOrReadOnly
+from .permissions import IsParticipantOfConversation, IsSenderOrReadOnly
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated, IsParticipantOrReadOnly]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter]
     search_fields = ['participants__username', 'participants__email']
 
