@@ -7,7 +7,7 @@ from django.contrib.auth import logout
 # Other views from previous tasks would go here...
 
 @login_required
-def delete_account(request):
+def delete_user(request):
     """
     Handles the user account deletion process.
 
