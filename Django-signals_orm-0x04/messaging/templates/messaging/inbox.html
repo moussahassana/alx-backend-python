@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inbox</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f4f4f9; }
+        .thread-list a {
+            display: block;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            text-decoration: none;
+            color: #333;
+        }
+        .thread-list a:hover { background-color: #f9f9f9; border-color: #ccc; }
+        .thread-list .meta { font-size: 0.9em; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Your Conversations</h1>
+    <div class="thread-list">
+        {% for thread in threads %}
+            <a href="{% url 'message_thread' thread.id %}">
+                <p>{{ thread.content|truncatewords:15 }}</p>
+                <p class="meta">
+                    Conversation with 
+                    {% if thread.sender == user %}
+                        <strong>{{ thread.receiver.username }}</strong>
+                    {% else %}
+                        <strong>{{ thread.sender.username }}</strong>
+                    {% endif %}
+                </p>
+            </a>
+        {% empty %}
+            <p>You have no messages.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
