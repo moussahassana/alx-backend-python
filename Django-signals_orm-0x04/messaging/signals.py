@@ -1,6 +1,11 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save,pre_delete
 from django.dispatch import receiver
 from .models import Message, Notification, MessageHistory
+from django.contrib.auth.models import User
+import logging
+
+# Set up a logger for debugging
+logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Message)
 def create_message_notification(sender, instance, created, **kwargs):
@@ -45,3 +50,28 @@ def log_message_edit(sender, instance, **kwargs):
             # This handles a rare edge case where the message might have been
             # deleted between the save() call and this signal running.
             pass
+
+@receiver(pre_delete, sender=User)
+def cleanup_user_data(sender, instance, **kwargs):
+    """
+    A signal that runs *before* a User is deleted.
+
+    This signal is responsible for cleaning up all data related to the user
+    to ensure the database is left in a clean state and to respect privacy.
+    
+    Args:
+        sender: The model class that sent the signal (User).
+        instance: The actual instance of the user being deleted.
+        **kwargs: Wildcard keyword arguments.
+    """
+    print(f"Signal triggered: Deleting data for user {instance.username}")
+
+    # Delete all messages where the user was the sender OR the receiver.
+    # The MessageHistory related to these messages will be deleted automatically
+    # due to the CASCADE setting on its own ForeignKey.
+    Message.objects.filter(Q(sender=instance) | Q(receiver=instance)).delete()
+
+    # Delete all notifications intended for the user.
+    Notification.objects.filter(user=instance).delete()
+    
+    print(f"Cleanup complete for user {instance.username}")
