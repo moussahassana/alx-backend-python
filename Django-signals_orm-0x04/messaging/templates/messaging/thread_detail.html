@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversation Thread</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; background-color: #f4f4f9; }
+        .message-block {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .message-block .meta { font-size: 0.9em; color: #666; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; }
+        .replies-container { margin-left: 30px; border-left: 3px solid #e0e0e0; padding-left: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Conversation</h1>
+
+    <!-- 
+        This is a recursive template snippet. It calls itself to render replies.
+        We pass the 'thread' context variable, which will be the root message on the first render,
+        and then each 'reply' object in subsequent renders.
+    -->
+    {% include "messaging/message_partial.html" with message=thread %}
+
+</body>
+</html>

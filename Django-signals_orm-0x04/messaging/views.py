@@ -1,10 +1,8 @@
-# messaging/views.py
-
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import logout
-# Other views from previous tasks would go here...
+from .models import Message
 
 @login_required
 def delete_user(request):
@@ -35,3 +33,23 @@ def delete_user(request):
 
     return render(request, 'messaging/delete_confirm.html')
 
+
+@login_required
+def message_thread_view(request, thread_id):
+    """
+    Displays a specific message thread, including all replies,
+    using the optimized query from the model's ThreadManager.
+    """
+    # Use our custom manager to fetch the entire thread efficiently
+    thread = Message.threads.get_thread(thread_id)
+
+    if not thread:
+        from django.http import Http404
+        raise Http404("Message thread not found or you are trying to view a reply directly.")
+
+    # A simple authorization check
+    if request.user not in [thread.sender, thread.receiver]:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    return render(request, 'messaging/thread_detail.html', {'thread': thread})

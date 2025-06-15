@@ -1,0 +1,23 @@
+<!-- messaging/templates/messaging/message_partial.html -->
+
+<div class="message-block">
+    <div class="meta">
+        <strong>From: {{ message.sender.username }}</strong> | 
+        <small>To: {{ message.receiver.username }}</small> | 
+        <small>{{ message.timestamp|date:"P, M d, Y" }}</small>
+        {% if message.is_edited %}<small> (edited)</small>{% endif %}
+    </div>
+    <div class="content">
+        {{ message.content|linebreaks }}
+    </div>
+</div>
+
+<!-- If this message has replies, render them inside a nested container -->
+{% if message.replies.all %}
+    <div class="replies-container">
+        {% for reply in message.replies.all %}
+            <!-- Recursive call to this same template for each reply -->
+            {% include "messaging/message_partial.html" with message=reply %}
+        {% endfor %}
+    </div>
+{% endif %}

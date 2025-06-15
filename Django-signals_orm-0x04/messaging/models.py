@@ -6,33 +6,31 @@ from django.db.models import Prefetch
 class ThreadManager(models.Manager):
     def get_thread(self, message_id):
         """
-        Fetches a message and all its replies, optimized to prevent N+1 queries.
-        This demonstrates the use of select_related and prefetch_related.
+        Fetches a message and all its replies recursively and efficiently.
+        
+        This method uses select_related for single-object foreign key relationships
+        (sender, receiver) and prefetch_related for reverse relationships (replies).
+        This combination is key to avoiding the N+1 query problem.
         """
-        # We start with the top-level message
-        # select_related is used for foreign key relationships (sender, receiver, parent_message).
-        # It performs a SQL JOIN.
-        queryset = self.get_queryset().select_related(
-            'sender', 'receiver', 'parent_message'
-        )
+        # Define the queryset for replies, pre-loading their sender/receiver info
+        replies_queryset = self.get_queryset().select_related('sender', 'receiver')
 
-        # prefetch_related is used for reverse foreign keys or many-to-many.
-        # It performs a separate lookup and joins the data in Python.
-        # This is ideal for fetching all replies recursively.
-        # We also prefetch the sender/receiver for the replies.
-        queryset = queryset.prefetch_related(
+        # We start with the top-level message queryset
+        # and prefetch its replies. For each reply, we also want to prefetch *its* replies.
+        # This nested prefetching is what allows us to retrieve multi-level threads efficiently.
+        queryset = self.get_queryset().select_related(
+            'sender', 'receiver'
+        ).prefetch_related(
             Prefetch(
-                'replies',
-                queryset=Message.objects.select_related('sender', 'receiver').prefetch_related(
-                    Prefetch('replies', queryset=Message.objects.select_related('sender', 'receiver'))
-                    # This can be nested further for deeper threads
+                'replies', # The related_name for the parent_message field
+                queryset=replies_queryset.prefetch_related(
+                    Prefetch('replies', queryset=replies_queryset) # Level 2 replies
                 )
-            ),
-            'edit_history'
+            )
         )
         
         try:
-            # Get the root message of the thread
+            # Fetch the root message of the thread (a message with no parent)
             root_message = queryset.get(pk=message_id, parent_message=None)
             return root_message
         except self.model.DoesNotExist:
@@ -50,25 +48,28 @@ class Message(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     is_edited = models.BooleanField(default=False)
     
-    # Self-referential ForeignKey for threaded conversations
+    # Self-referential ForeignKey to enable threaded conversations.
+    # 'self' means the ForeignKey points to this same model.
     parent_message = models.ForeignKey(
         'self', 
         on_delete=models.CASCADE, 
         null=True, 
         blank=True, 
-        related_name='replies'
+        related_name='replies' # This name is used in prefetch_related
     )
 
-    # Add the custom manager
-    objects = models.Manager() # The default manager
-    threads = ThreadManager() # Our custom manager for fetching threads
+    # Add the managers
+    objects = models.Manager() # Keep the default manager
+    threads = ThreadManager()  # Our custom manager for fetching threads
+
+    class Meta:
+        ordering = ['timestamp']
 
     def __str__(self):
-        """String representation of a Message."""
         if self.parent_message:
-            return f"Reply from {self.sender} to {self.receiver} on message {self.parent_message.id}"
-        return f"Message from {self.sender} to {self.receiver} at {self.timestamp}"
-
+            return f"Reply from {self.sender} on message {self.parent_message.id}"
+        return f"Message from {self.sender} to {self.receiver}"
+    
 class Notification(models.Model):
     """
     Represents a notification for a user about a new message.
