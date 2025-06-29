@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Apply both deployments
+kubectl apply -f messaging_app/blue_deployment.yaml
+kubectl apply -f messaging_app/green_deployment.yaml
+
+# Apply the service
+kubectl apply -f messaging_app/kubeservice.yaml
+
+# Wait for pods to start
+sleep 5
+
+# Check logs of green deployment
+kubectl logs -l app=django,color=green

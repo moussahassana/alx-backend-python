@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+      color: green
+  template:
+    metadata:
+      labels:
+        app: django
+        color: green
+    spec:
+      containers:
+        - name: django
+          image: moussahassana/django-messaging:2.0
+          ports:
+            - containerPort: 8000

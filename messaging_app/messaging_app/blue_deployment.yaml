@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-blue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+      color: blue
+  template:
+    metadata:
+      labels:
+        app: django
+        color: blue
+    spec:
+      containers:
+        - name: django
+          image: moussahassana/django-messaging:1.0
+          ports:
+            - containerPort: 8000
