@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Scale the Django app to 3 replicas
+kubectl scale deployment django-messaging --replicas=3
+
+# Wait a bit for pods to be created
+sleep 5
+
+# Verify that multiple pods are running
+kubectl get pods
+
+# Load test using wrk (adjust URL if needed)
+MINIKUBE_IP=$(minikube ip)
+NODE_PORT=$(kubectl get svc django-messaging-service -o=jsonpath='{.spec.ports[0].nodePort}')
+wrk -t2 -c50 -d10s http://$MINIKUBE_IP:$NODE_PORT/
+
+# Monitor resource usage
+kubectl top pods
