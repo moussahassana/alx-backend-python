@@ -1,23 +1,29 @@
 #!/bin/bash
 
-# Apply the updated deployment with image version 2.0
+set -e
+
+echo "🚀 Applying updated deployment (image v2.0)..."
 kubectl apply -f messaging_app/blue_deployment.yaml
 
-# Monitor the rollout status
+echo "⏳ Monitoring rollout status of 'django-blue'..."
 kubectl rollout status deployment/django-blue
 
-# Get the service IP and port
+echo "🔍 Fetching Minikube IP and django-service NodePort..."
 MINIKUBE_IP=$(minikube ip)
 NODE_PORT=$(kubectl get svc django-service -o=jsonpath='{.spec.ports[0].nodePort}')
 
-echo "Testing for downtime during rollout..."
+echo "🌐 Service URL: http://$MINIKUBE_IP:$NODE_PORT/"
+echo "🧪 Starting rollout downtime test for 20 seconds..."
 
-# Send requests continuously for 20 seconds
-for i in {1..20}
-do
-  curl -s http://$MINIKUBE_IP:$NODE_PORT/ > /dev/null && echo "OK" || echo "FAIL"
+for i in {1..20}; do
+  RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$MINIKUBE_IP:$NODE_PORT/)
+  if [[ "$RESPONSE" == "200" ]]; then
+    echo "[$i] ✅ OK"
+  else
+    echo "[$i] ❌ FAIL (HTTP $RESPONSE)"
+  fi
   sleep 1
 done
 
-# Show the updated pods
-kubectl get pods -l app=django
+echo "📦 Current pods with label app=django:"
+kubectl get pods -l app=django -o wide
